@@ -1,0 +1,96 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: ${env:SERVERLESS_ORG}
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: ${env:SERVERLESS_SERVICE}
+
+build:
+  esbuild:
+    minify: true
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION}
+  iam:
+    role: ${env:AWS_ROLE}
+
+functions: 
+  Signup:
+    handler: src/functions/UserFunctions/userSignup.handler
+    events: 
+      - http:
+          path: /user/signup
+          method: post
+  Login:
+    handler: src/functions/UserFunctions/userLogin.handler
+    events:
+      - http:
+          path: /user/login
+          method: post
+  postQuiz:
+    handler: src/functions/QuizFunctions/postQuiz.handler
+    events:
+      - http:
+          path: /quiz
+          method: post
+  postQuestion:
+    handler: src/functions/QuizFunctions/postQuestion.handler
+    events:
+      - http:
+          path: /quiz/question
+          method: post
+  getQuiz:
+    handler: src/functions/QuizFunctions/getAllQuiz.handler
+    events:
+      - http:
+          path: /quiz
+          method: get
+  getOneQuiz:
+    handler: src/functions/QuizFunctions/getOneQuiz.handler
+    events:
+      - http:
+          path: /quiz/{quiz}/{user}
+          method: get
+  answerQuiz:
+    handler: src/functions/QuizFunctions/answerQuiz.handler
+    events:
+      - http:
+          path: /quiz/answer
+          method: post
+  getResults:
+    handler: src/functions/QuizFunctions/getResults.handler
+    events:
+      - http:
+          path: /quiz/results/{quiz}
+          method: get
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${env:TABLE_NAME_USERS}
+    QuizTable: 
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: quizName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: quizName
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${env:TABLE_NAME_QUIZ}
+
+plugins: 
+  - serverless-express
